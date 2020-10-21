@@ -1,4 +1,3 @@
 \tesstrain\uygevaldata\arial.lstmf
 \tesstrain\uygevaldata\ukijesliye.lstmf
 \tesstrain\uygevaldata\ukijtuz.lstmf
-\tesstrain\uygevaldata\ukijtuzgezitb.lstmf
