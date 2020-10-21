@@ -1,6 +1,6 @@
 # TesseractOCR ning Uyghurche yéngidin ögitilgen modél höjjiti
 
-Eger bu yerdiki mezmunlarni körmeyla, hasil qilinghan modél höjjiti ukij.tesstraindata ni ishlitishkimu bolidu. ukij.tesstraindata alliqachan https://github.com/gheyret/UyghurOCR gha qoshuldi.
+Bu yerdiki mezmunlarni körmey, hasil qilinghan modél höjjiti ukij.tesstraindata ni ishlitmekchi bolsingiz, https://github.com/gheyret/UyghurOCR gha merhemet.
 
 ### 1. TesseractOCR Heqqide
 
