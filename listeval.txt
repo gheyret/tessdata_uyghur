@@ -1,4 +1,4 @@
-F:\tesstrain\uygevaldata\arial.lstmf
-F:\tesstrain\uygevaldata\ukijesliye.lstmf
-F:\tesstrain\uygevaldata\ukijtuz.lstmf
-F:\tesstrain\uygevaldata\ukijtuzgezitb.lstmf
+\tesstrain\uygevaldata\arial.lstmf
+\tesstrain\uygevaldata\ukijesliye.lstmf
+\tesstrain\uygevaldata\ukijtuz.lstmf
+\tesstrain\uygevaldata\ukijtuzgezitb.lstmf
