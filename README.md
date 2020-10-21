@@ -1,0 +1,2 @@
+# tessdata_uyghur
+Test
