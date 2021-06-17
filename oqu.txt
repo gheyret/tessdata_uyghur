@@ -1,0 +1,106 @@
+Each iteration is just one line of text in one font.
+Change debug interval to -1 to see details of each iteration.
+--debug_interval -1 \
+Finetuning with 300-400 iterations may not be enough for handwriting.
+
+
+
+#lstm ni qayta ogitish uchun data yasash buyruqi: boghdatuz.tif we boghdatuz.box degen hojjet hasil bolidu
+text2image.exe --text .\.txt --ptsize 32 --leading 32 --max_pages 1000 --outputbase .\uygdata\boghdatuz --font "Boghda Tuz" --fonts_dir .\fonts
+
+#fontlarni korup beqish buyruqi
+  text2image.exe --list_available_fonts --fonts_dir .\fonts
+
+#yasalghan hojjetke asasen lstmtrain da ishletkili bolidighan hojejtni hasil qilish buyruqi
+#boghdatuz.tif qa asasen boghdatuz.lstmf degen hojjetni hasil qilidu
+tesseract .\uygdata\boghdatuz.tif .\uygdata\boghdatuz -l uig --psm 6 lstm.train
+
+#Burunqi model din barliq boleklerni tartip chiqirish buyruqi
+combine_tessdata.exe -u .\tessdata_best\uig.traineddata uygyengi\uig
+
+#Burunqi modelning ichidin lstm modelini tartip chiqirish buyruqi
+combine_tessdata -e tessdata_best\uig.traineddata uig.lstm
+
+
+
+#unicharset_extractor Box hojjetke asasen unciharset hojjitini yasap beridu
+unicharset_extractor.exe .\uygdata\boghdatuz.box
+
+#Bu yer bek muhim. buni hasil qilmisa keyinki ogitish
+#Ogetkendin yengi model hasil qilish mummkin emes
+#Burunqi modeldin tartip chiqarghan langdata din paydilinip yengi unicharset ni ishlitip
+#yengidin langdata hasil qilish buyruqi
+#uig.config ni erebchidin kochurup ekeldim
+#bolmisa xataliq chiqiwatidu?
+combine_lang_model.exe --lang_is_rtl=true  --input_unicharset="unicharset" --lang="uig" --script_dir="langdata_lstm" --output_dir="uyglangdata"
+
+#Modelni meshiq qildurush buyruqi
+#Tunji Qetim ijra qilghanda choqum 
+#old_traineddata ni korsitip berish kerek
+lstmtraining --model_output="uygbest\uygbest" --continue_from="uyg.lstm" --train_listfile="list.txt" --eval_listfile="listeval.txt" --traineddata="uygyengi\uig\uig.traineddata"  --old_traineddata="tessdata_best\uig.traineddata" --target_error_rate=0.01
+#Tunji qetim ijra ogitishni bashlighanda 
+lstmtraining --model_output="uygbest\uygbest" --train_listfile="list.txt" --traineddata="uygyengi\uig\uig.traineddata"  --target_error_rate=0.0080 --old_traineddata="tessdata_best\uig.traineddata" --continue_from="uygyengi\uig.lstm"
+
+#Check point qa birer qetim saqlinip bolghandin keyinki
+lstmtraining --model_output="uygbest\uygbest" --train_listfile="list.txt" --traineddata="uygyengi\uig\uig.traineddata"  --target_error_rate=0.0080
+
+#Ogitilgen modelni Tesseract ta ishletkili bolidighan formatqa ekelish buyruqi
+lstmtraining --stop_training --continue_from="uygbest\uygbest_checkpoint" --traineddata="uygyengi\uig\uig.traineddata" --model_output="ukij.traineddata"
+
+lstmtraining --stop_training --continue_from="ukijtrain\best_0.002_17999_629900.checkpoint" --traineddata="ukij\uig\uig.traineddata" --model_output="ukij3.traineddata"
+
+
+
+#Axirida hasil qilinghan model word, number, punc degen language modellarni qoshushimiz kerek(ixtiyar)
+#Mezkur language modellarni hasil qilish buyruqi
+#Buyerdiki *-dawg degen isimlar muqim, ozgertishke bolmaydu
+
+wordlist2dawg.exe .\langdata_lstm\uig\uig.punc uig.lstm-punc-dawg .\unicharset
+wordlist2dawg.exe .\langdata_lstm\uig\uig.numbers uig.lstm-number-dawg .\unicharset
+wordlist2dawg.exe sozler uig.lstm-word-dawg .\unicharset
+
+combine_tessdata.exe -o .\ukij.traineddata .\uig.lstm-number-dawg .\uig.lstm-word-dawg .\uig.lstm-punc-dawg
+
+#Modelning tonush nispitini korup beqish
+lstmeval.exe --model="ukij2.traineddata" --eval_listfile="listeval.txt" --verbosity=0  
+
+#Nowette ogitiliwatqan modelning toush nispitini korup beqish
+lstmeval.exe --model="uygbest\uygbest_checkpoint" --traineddata="uygyengi\uig\uig.traineddata" --eval_listfile="listeval.txt" --verbosity=0
+
+
+
+
+
+2021/01/13  tiki buyruqlar
+
+#Burunqi Modelni yeyiwalimiz
+combine_tessdata.exe -u .\tessdata_best\uig.traineddata ukij\ukij
+
+#box hojjetke asasen yengidin unicharset yasiwalimiz
+unicharset_extractor.exe .\data\boghdatuz14.box 
+#unicharset --> ukij.unicharset qilip ozgertimiz
+
+#Burunqi model we hazirqi unciharset qa asasen yengidin model qurlmisini yasiwalidu
+combine_lang_model.exe --lang_is_rtl=true  --input_unicharset="ukij.unicharset" --lang="uig" --script_dir="langdata_lstm" --output_dir="ukij"
+
+lstmtraining --model_output="ukijtrain\best" --continue_from="ukij\ukij.lstm" --train_listfile="list11.txt" --traineddata="ukij\uig\uig.traineddata"  --old_traineddata="tessdata_best\uig.traineddata" --target_error_rate=0.01
+
+#Bire qetim oginip checkpoin ni saqlap bolghanda, meshiq qildurush uchun towendikidek addiy buruqni bersimu bolidu
+lstmtraining --model_output="ukijtrain\best" --train_listfile="list11.txt" --traineddata="ukij\uig\uig.traineddata"  --target_error_rate=0.0080
+
+
+#Linuxtiki Buyruqlar
+
+text2image --text uyg_train.txt --ptsize 18 --max_pages 1000 --outputbase ./fontdata/boghdatuz18 --font "Boghda Tuz" --fonts_dir ../ufonts
+
+
+tesseract ./fontdata/boghdatuz.tif ./fontdata/boghdatuz -l uig --psm 6 lstm.train
+unicharset_extractor ./fontdata/boghdatuz.box
+
+combine_tessdata -u ./tessdata_best/uig.traineddata ukij/ukij
+
+combine_lang_model --lang_is_rtl=true  --input_unicharset="ukij.unicharset" --lang="uig" --script_dir="./langdata_lstm" --output_dir="ukij"
+
+lstmtraining --model_output="ukijtrain/best" --continue_from="ukij/ukij.lstm" --train_listfile=boghda.txt --traineddata="ukij/uig/uig.traineddata"  --old_traineddata="tessdata_best/uig.traineddata" --target_error_rate=0.01
+
+lstmtraining --model_output="ukijtrain/best" --train_listfile="list.txt" --traineddata="ukij/uig/uig.traineddata"  --target_error_rate=0.005
